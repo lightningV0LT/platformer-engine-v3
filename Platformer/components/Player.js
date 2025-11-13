@@ -1,12 +1,7 @@
-import { behaviors } from '../data/behavior-registry.js';
-import { Transition } from './SceneSystem.js'
-
-fetch('../Data/player-stats.JSON')
-  .then(res => res.json())
-  .then(data => Player.stats = data);
+import behaviors from '../data/behavior-registry.js';
 
 /** Player Class **/
-export class Player {
+export default class Player {
   static size = 100;
   static character = 0;
   static binds = () => ({
@@ -98,6 +93,7 @@ export class Player {
       pop();
       rectMode(CORNER);
   }
+
   resolveSolidCollisions() {
     for (const block of this.contactBlocks) {
       if (!block.solidColl) continue;
@@ -126,6 +122,7 @@ export class Player {
       }
     }
   }
+
   handleCollisions(game) {
     if (this.dead) return;
     // Group current blocks by tag
@@ -138,69 +135,31 @@ export class Player {
     }
 
     // Process behaviors per tag
-    const allTags = new Set([
-      ...Object.keys(this.cachedBlocks),
-      ...Object.keys(currentBlocks)
-    ]);
+    const allTags = new Set([...Object.keys(this.cachedBlocks), ...Object.keys(currentBlocks)]);
 
     for (const tag of allTags) {
-      const entry = this.cachedBlocks[tag] ||= {
-        blocks: new Set(),
-        entered: false,
-        lastBlock: null
-      };
-
+      const entry = this.cachedBlocks[tag] ||= { blocks: new Set(), entered: false, lastBlock: null };
       const currentlyColliding = currentBlocks[tag] || [];
-      const wasColliding = entry.blocks.size > 0;
-      const isColliding = currentlyColliding.length > 0;
-      const firstBlock = currentlyColliding[0] || entry.lastBlock;
+      const firstBlock = entry.lastBlock || currentlyColliding[0];
 
-      // On enter
-      if (isColliding && !wasColliding) {
-        if (firstBlock?.onEnter && typeof firstBlock.onEnter === 'object') {
-          Object.keys(firstBlock.onEnter).forEach(k => {
-            if (behaviors.onEnter[k]) {
-              behaviors.onEnter[k]?.(this, firstBlock, game, firstBlock.onEnter[k]);
-            }
-          });
-        }
-        entry.entered = true;
+      applyBehaviors('onEnter', this, firstBlock, game, firstBlock.onEnter);
+      applyBehaviors('whileColliding', this, firstBlock, game, firstBlock.whileColliding);
+      applyBehaviors('onExit', this, firstBlock, game, firstBlock.onExit);
+      applyBehaviors('afterExit', this, firstBlock, game, firstBlock.afterExit);
+
+      currentlyColliding.forEach(block => entry.blocks.add(block));
+      if (!(currentlyColliding.length > 0)) {
+        entry.blocks.clear();
+      } else {
+        entry.lastBlock = currentlyColliding[0]; 
       }
-
-      // While colliding
-      if (isColliding && firstBlock?.whileColliding && typeof firstBlock.whileColliding === 'object') {
-        Object.keys(firstBlock.whileColliding).forEach(k => {
-          if (behaviors.whileColliding[k]) {
-            behaviors.whileColliding[k]?.(this, firstBlock, game, firstBlock.whileColliding[k]);
-          }
-        });
-      }
-
-      // On exit
-      if (!isColliding && wasColliding) {
-        if (firstBlock?.onExit && typeof firstBlock.onExit === 'object') {
-          Object.keys(firstBlock.onExit).forEach(k => {
-            if (behaviors.onExit[k]) {
-              behaviors.onExit[k]?.(this, firstBlock, game, firstBlock.onExit[k]);
-            }
-          });
-        }
-
-        // After exit
-        if (entry.entered && firstBlock?.afterExit && typeof firstBlock.afterExit === 'object') {
-          Object.keys(firstBlock.afterExit).forEach(k => {
-            if (behaviors.afterExit[k]) {
-              behaviors.afterExit[k]?.(this, firstBlock, game, firstBlock.afterExit[k]);
-            }
-          });
-        }
-
-        entry.entered = false;
-      }
-
-      // Update cached blocks
-      entry.blocks = new Set(currentlyColliding);
-      if (isColliding) entry.lastBlock = firstBlock;
     }
+  }
+}
+
+function applyBehaviors(type, player, block, game, config) {
+  if (!config || typeof config !== 'object') return;
+  for (const key of Object.keys(config)) {
+    behaviors[type]?.[key]?.(player, block, game, config[key]);
   }
 }
