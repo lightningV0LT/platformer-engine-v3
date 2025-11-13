@@ -1,15 +1,14 @@
-import { setKey } from './data/block-data.js';
-import { Camera } from './components/Camera.js';
-import { Player } from './components/Player.js';
-import { Block } from './components/Block.js';
-import { AssetLoader } from './components/AssetLoader.js';
+import Camera from './components/Camera.js';
+import Player from './components/Player.js';
+import Block from './components/Block.js';
+import behaviors from './data/behavior-registry.js';
 
-export class Game {
+
+export default class Game {
     constructor() {
         this.startLevel = 0;
         this.currentLevel = 0;
         this.objects = [];
-        this.blockKey = {};
         this.spawnpoint = {};
 
         this.level = Game.level_data[this.currentLevel];
@@ -28,18 +27,24 @@ export class Game {
 
         for(let row = 0; row < this.level.length; row++) {
             for(let col = 0; col < this.level[row].length; col++) {
-                const entry = this.blockKey[this.level[row][col]];
+                const entry = Game.block_data[this.level[row][col]];
                 if(!entry) continue;
-                this.objects.push(new entry.obj({
-                    x: col * Block.size,
-                    y: row * Block.size,
+                this.objects.push(new ({ Player, Block }[entry.obj])({
+                    x: col * Block.size + (entry.xOffset ?? 0) * Block.size,
+                    y: row * Block.size + (entry.yOffset ?? 0) * Block.size,
                     ...entry
                 }));
             }
         }
 
-        [...new Map(this.objects.map(obj => [obj.tag, obj])).values()]
-  .forEach(obj => obj?.onLoad?.(obj));
+        // run onLoad behaviors after all objects are created (some behaviors depend on other objects existing)
+        for (const obj of this.objects) {
+            const onLoad = obj.onLoad;
+            if (!onLoad || typeof onLoad !== 'object') continue;
+            Object.keys(onLoad).forEach(k => {
+                if (behaviors.onLoad[k]) behaviors.onLoad[k](obj, this, onLoad[k]);
+            });
+        }
 
         this.objects.sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
 
@@ -47,7 +52,6 @@ export class Game {
     }
     init() {
       Object.assign(Camera, globalThis.viewport);
-      setKey(this);
       this.loadNew(this.startLevel);
     }
     run() {
