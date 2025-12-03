@@ -1,0 +1,353 @@
+{
+  "P": {
+    "tag": "player", 
+    "id": 0, 
+    "zIndex": 1, 
+    "obj": "Player",
+    "onLoad": { 
+      "setSpawn": "player"
+    }
+  },
+
+  "-": { 
+    "tag": "block", 
+    "solidColl": true, 
+    "zIndex": 0, 
+    "obj": "Block"
+  },
+
+  "~": { 
+    "tag": "jump_pad", 
+    "solidColl": true, 
+    "zIndex": 0, 
+    "obj": "Block", 
+    "h": 0.5, 
+    "yOffset": 0.5, 
+    "onEnter": { 
+      "boost": 1.2
+    }
+  },
+
+  "w": {
+    "tag": "water", 
+    "zIndex": 2, 
+    "obj": "Block",
+
+    "onEnter": { 
+      "effect": { 
+        "a": 0.5, 
+        "mvx": 0.5, 
+        "jumpSpeed": 0.5, 
+        "mvy": 0.5, 
+        "multiActivate": true
+      }
+    },
+
+    "onExit": { 
+      "effect": { 
+        "a": 2, 
+        "mvx": 2, 
+        "jumpSpeed": 2, 
+        "mvy": 2, 
+        "multiActivate": true
+      }
+    },
+
+    "whileColliding": { 
+      "fly": true
+    },
+
+    "onLoad": { 
+      "loadSprite": { 
+        "extractX": 2, 
+        "extractY": 0
+      }
+    }
+  },
+
+  "f": {
+    "tag": "frost", 
+    "zIndex": 2, 
+    "obj": "Block",
+
+    "onEnter": {
+      "effect": { 
+        "a": 0.5, 
+        "mvx": 0.3333333333333333, 
+        "jumpSpeed": 0.3333333333333333, 
+        "mvy": 0.5, 
+        "multiActivate": true
+      },
+
+      "initTimer": { 
+        "name": "freezing",
+        "target": "player", 
+        "dur": 150, 
+        "deplete": -1, 
+        "effect": "death", 
+        "multiActivate": true, 
+        "triggerAmt": 1
+      }
+    },
+
+    "onExit": { 
+
+      "effect": { 
+        "a": 2, 
+        "mvx": 3, 
+        "jumpSpeed": 3, 
+        "mvy": 2, 
+        "multiActivate": true
+      }
+    },
+
+    "whileColliding": { 
+      "updateTimer": "freezing"
+    },
+
+    "afterExit": { 
+      "depleteTimer": "freezing"
+    },
+
+    "onLoad": { 
+      "loadSprite": { 
+        "extractX": 3, 
+        "extractY": 0
+      }
+    }
+  },
+
+  "M": {
+    "tag": "receivers", 
+    "solidColl": true, 
+    "zIndex": 0, 
+    "obj": "Block",
+
+    "onLoad": {
+      "linkPairs": {
+        "createBlock": {
+          "pos": "current",
+          "h": 0.5,
+          "t": 0,
+          "tag": "platform",
+          "solidColl": true,
+          "obj": "Block",
+
+          "action": {
+            "moveSineToFrom": 0.01
+          },
+
+          "whileColliding": {
+            "stick": "player"
+          },
+
+          "onExit": {
+            "deleteOffset": "player"
+          }
+        }
+      }
+    }
+  },
+
+  "X": {
+    "tag": "teleporter",
+    "zIndex": 0,
+    "obj": "Block",
+
+    "onLoad": {
+      "linkPairs": { 
+        "addDestination": "to"
+      },
+      "loadSprite": { 
+        "extractX": 1, 
+        "extractY": 0
+      }
+    },
+
+    "onEnter": {
+      "initTimer": { 
+        "name": "teleport", 
+        "target": "block", 
+        "dur": 100, 
+        "effect": "teleportToPair", 
+        "multiActivate": true, 
+        "triggerAmt": 1
+      }
+    },
+
+    "whileColliding": { 
+      "updateTimer": "teleport"
+    }
+  },
+
+  "O": {
+    "tag": "orb", 
+    "zIndex": 0, 
+    "obj": "Block",
+        
+    "onEnter": { 
+      "resetTap": true
+    },
+        
+    "whileColliding": { 
+      "jumpOnTap": {}
+    },
+        
+    "onLoad": { 
+      "loadSprite": { 
+        "extractX": 5, 
+        "extractY": 0
+      }
+    }
+  },
+
+  "U": {
+    "tag": "gravity_orb", 
+    "zIndex": 0, 
+    "obj": "Block",
+
+    "onEnter": { 
+      "resetTap": true
+    },
+
+    "whileColliding": { 
+      "effectOnTap": { 
+        "g": -1
+      }
+    },
+
+    "onLoad": { 
+      "loadSprite": { 
+        "extractX": 6, 
+        "extractY": 0
+      }
+    }
+  },
+
+  ";": {
+    "tag": "checkpoint", 
+    "zIndex": 0, 
+    "obj": "Block",
+
+    "onEnter": { 
+      "setSpawn": "block"
+    }
+  },
+
+  "@": {
+    "tag": "portal",
+    "zIndex": 0,
+    "obj": "Block",
+    
+    "onEnter": { 
+      "nextLevel": true
+    },
+
+    "onLoad": { 
+      "loadSprite": { 
+        "extractX": 4, 
+        "extractY": 0
+      }
+    }
+  },
+
+  "0": {
+    "tag": "sc_norm",
+    "zIndex": 0,
+    "obj": "Block",
+    "onEnter": {
+      "resetStats": true
+    }
+  },
+  "1": {
+    "tag": "sc_slow",
+    "zIndex": 0,
+    "obj": "Block",
+    "onEnter": {
+      "effect": {
+        "mvx": 0.75
+      }
+    }
+  },
+  "2": {
+    "tag": "sc_xnorm",
+    "zIndex": 0,
+    "obj": "Block",
+    "onEnter": {
+      "effect": {
+        "mvx": 1
+      }
+    }
+  },
+  "3": {
+    "tag": "sc_speed",
+    "zIndex": 0,
+    "obj": "Block",
+    "onEnter": {
+      "effect": {
+        "mvx": 1.5
+      }
+    }
+  },
+  "4": {
+    "tag": "sc_ufloat",
+    "zIndex": 0,
+    "obj": "Block",
+    "onEnter": {
+      "effect": {
+        "g": 0.75
+      }
+    }
+  },
+  "5": {
+    "tag": "sc_gnorm",
+    "zIndex": 0,
+    "obj": "Block",
+    "onEnter": {
+      "effect": {
+        "g": 1
+      }
+    }
+  },
+  "6": {
+    "tag": "sc_ufall",
+    "zIndex": 0,
+    "obj": "Block",
+    "onEnter": {
+      "effect": {
+        "g": 1.5
+      }
+    }
+  },
+  "7": {
+    "tag": "sc_ufloat",
+    "zIndex": 0,
+    "obj": "Block",
+    "onEnter": {
+      "effect": {
+        "g": -0.75
+      }
+    }
+  },
+  "8": {
+    "tag": "sc_ugnorm",
+    "zIndex": 0,
+    "obj": "Block",
+    "onEnter": {
+      "effect": {
+        "g": -1
+      }
+    }
+  },
+  "9": {
+    "tag": "sc_ufall",
+    "zIndex": 0,
+    "obj": "Block",
+    "onEnter": {
+      "effect": {
+        "g": -1.5
+      }
+    }
+  }
+
+}
